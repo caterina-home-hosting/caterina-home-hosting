@@ -1,0 +1,45 @@
+name: Pulizia scritte sulle fotografie
+on:
+  push:
+    paths:
+      - ".github/workflows/pulisci-foto.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  pulisci-foto:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rimuovi soltanto le sovrapposizioni sulle foto
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("index.html")
+          s = p.read_text(encoding="utf-8")
+          marker = "/* Caterina: foto pulite, senza scritte sovrapposte */"
+          if marker not in s:
+              css = """<style>
+          /* Caterina: foto pulite, senza scritte sovrapposte */
+          .card .inline-gallery summary .photo-hint,
+          .card .inline-gallery summary .photo-overlay,
+          .card .inline-gallery summary .image-overlay,
+          .card .inline-gallery summary .image-label,
+          .card .inline-gallery summary .photo-label,
+          .card .inline-gallery summary::before,
+          .card .inline-gallery summary::after { display:none !important; content:none !important; }
+          </style>"""
+              if "</head>" not in s:
+                  raise SystemExit("Nessun tag head trovato; nessuna modifica effettuata")
+              s = s.replace("</head>", css + "</head>", 1)
+              p.write_text(s, encoding="utf-8")
+          PY
+      - name: Pubblica la modifica
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Nascondi scritte sulle foto degli appartamenti"
+            git push
+          fi
