@@ -163,3 +163,19 @@
     initializeLanguage();
   }
 })();
+
+/* Anteprima ordinamento blocchi: nessun contenuto viene eliminato o riscritto. */
+(() => {
+  function reorderHomepage() {
+    const apartments = document.getElementById('appartamenti');
+    const intro = document.querySelector('section:not([id]):not([class])');
+    if (apartments && intro && intro.parentNode === apartments.parentNode) {
+      intro.parentNode.insertBefore(apartments, intro);
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', reorderHomepage, {once: true});
+  } else {
+    reorderHomepage();
+  }
+})();
