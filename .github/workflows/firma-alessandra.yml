@@ -1,0 +1,41 @@
+name: Firma Alessandra e informazioni contatti
+on:
+  push:
+    paths:
+      - ".github/workflows/firma-alessandra.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  footer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Aggiungi firma e nota trasparente WhatsApp
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          credit = '<p class="site-credit" style="font-size:12px;opacity:.8;margin-top:8px">Sito realizzato da Alessandra Berta</p>'
+          if 'Sito realizzato da Alessandra Berta' not in s:
+              anchor = '<p>© 2026 Caterina Home Hosting</p>'
+              assert anchor in s, 'Footer non trovato: nessuna modifica'
+              s = s.replace(anchor, anchor + credit, 1)
+          note = 'La richiesta viene preparata sul tuo dispositivo e si apre su WhatsApp: nessun messaggio viene inviato automaticamente.'
+          if note not in s:
+              old = 'WhatsApp si aprirà con il messaggio già scritto; l’invio resta a tua conferma.'
+              assert old in s, 'Nota WhatsApp non trovata: nessuna modifica'
+              s = s.replace(old, note, 1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Salva modifica
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Aggiungi firma Alessandra Berta e nota WhatsApp"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
