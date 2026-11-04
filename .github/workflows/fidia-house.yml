@@ -1,0 +1,67 @@
+name: Scheda Fidia House completa
+on:
+  push:
+    paths:
+      - ".github/workflows/fidia-house.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  aggiorna:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Integra cinque soluzioni Fidia da presentazione ufficiale
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          if 'id="fidia-soluzioni"' in s:
+              print("Scheda Fidia gia aggiornata")
+              raise SystemExit(0)
+          start=s.find('<article class="card" data-property="fidia">')
+          stop=s.find('</article>',start)
+          assert start>=0 and stop>start,'Scheda Fidia non trovata'
+          block=s[start:stop]
+          marker='<span class="gallery-link">Fotografia di Fidia’s House</span>'
+          assert marker in block,'Punto di inserimento Fidia non trovato'
+          data='''<div id="fidia-soluzioni" class="fidia-soluzioni">
+          <p class="fidia-intro"><strong>Fidia’s House · 200 m²</strong> — cinque diverse soluzioni all’interno della struttura, nel quartiere Isola. Camere con caratteristiche differenti, spazi di lavoro e collegamenti comodi con metro, tram e stazioni.</p>
+          <h4>Le cinque soluzioni</h4>
+          <div class="fidia-grid">
+          <div class="fidia-room"><strong>Olimpia</strong><span>Fino a 3 ospiti · 2 camere · 2 letti · bagno privato</span><p>Soluzione autonoma con cucina, spazio di lavoro, TV, Wi-Fi e balcone privato.</p></div>
+          <div class="fidia-room"><strong>Zeus</strong><span>Fino a 4 ospiti · 2 letti · bagno condiviso</span><p>Camera di circa 60 m² con terrazzo autonomo, zona ristoro, spazio di lavoro, TV e Wi-Fi.</p></div>
+          <div class="fidia-room"><strong>Athena</strong><span>Fino a 2 ospiti · 1 letto · bagno condiviso</span><p>Camera matrimoniale con letti configurabili, frigobar, aria condizionata, Wi-Fi e spazio di lavoro.</p></div>
+          <div class="fidia-room"><strong>Efeso</strong><span>Fino a 2 ospiti · 1 letto · bagno condiviso</span><p>Camera luminosa con terrazzino autonomo, aria condizionata, Wi-Fi e spazio di lavoro.</p></div>
+          <div class="fidia-room"><strong>Apollo</strong><span>1 ospite · 1 letto · bagno condiviso</span><p>Camera singola di circa 15 m² con aria condizionata, Wi-Fi e spazio di lavoro.</p></div>
+          </div><p class="fidia-note">Per scegliere la sistemazione più adatta e ricevere le fotografie relative, contatta Caterina su WhatsApp.</p>
+          </div>'''
+          block=block.replace(marker,data+marker,1)
+          s=s[:start]+block+s[stop:]
+          css='''<style id="fidia-soluzioni-style">
+          .fidia-soluzioni{margin:17px 0 15px;padding:16px;border:1px solid #e2ebe9;border-radius:12px;background:#f6faf9;color:#294349}
+          .fidia-soluzioni h4{font:600 17px Georgia,serif;margin:16px 0 9px;color:#16414a}
+          .fidia-soluzioni .fidia-intro,.fidia-soluzioni .fidia-note{font-size:13px;line-height:1.65;margin:0}
+          .fidia-grid{display:grid;grid-template-columns:1fr;gap:9px}
+          .fidia-room{padding:11px;background:#fff;border-radius:8px;border:1px solid #e5eeee}
+          .fidia-room strong,.fidia-room span{display:block}
+          .fidia-room strong{color:#16414a;font-size:15px}
+          .fidia-room span{font-size:12px;color:#3d6b6a}
+          .fidia-room p{font-size:12px;line-height:1.5;margin:4px 0 0}
+          .fidia-soluzioni .fidia-note{margin-top:12px}
+          </style>'''
+          assert '</head>' in s
+          s=s.replace('</head>',css+'</head>',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Pubblica modifiche
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Completa Fidia House con Olimpia Zeus Athena Efeso Apollo"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
