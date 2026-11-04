@@ -1,0 +1,82 @@
+name: Sezione Milano
+on:
+  push:
+    paths:
+      - ".github/workflows/sezione-milano.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  inserisci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Aggiungi mappa illustrativa delle zone
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          html=p.read_text(encoding='utf-8')
+          if 'id="zone-milano"' in html:
+              print('Sezione Milano gia presente, non duplicata')
+              raise SystemExit(0)
+          marker='<section class="soft" id="appartamenti">'
+          assert html.count(marker)==1,'Sezione appartamenti non trovata'
+          section='''<section id="zone-milano" class="ch-zones" aria-labelledby="ch-zones-title">
+            <div class="wrap ch-zones-layout">
+              <div class="ch-zones-copy">
+                <div class="eyebrow">Le nostre zone</div>
+                <h2 id="ch-zones-title">Una città intera per sentirsi a casa.</h2>
+                <p>Dall’Isola alla Bicocca, passando per Dergano e Crescenzago: diverse soluzioni per vivere Milano con libertà.</p>
+                <p class="ch-zones-footnote">Schema illustrativo delle zone; non indica posizioni o distanze esatte.</p>
+              </div>
+              <div class="ch-zones-map" role="img" aria-label="Schema indicativo degli alloggi nelle zone Isola, Dergano, Bicocca e Crescenzago">
+                <svg viewBox="0 0 690 360" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <g stroke="#719ba5" stroke-width="1.5" opacity=".35" fill="none">
+                    <path d="M170 40 L308 8 464 28 555 95 601 180 525 294 365 343 190 318 102 224Z"/>
+                    <path d="M170 40 241 115 198 230 190 318 M308 8 317 120 365 343 M464 28 402 130 525 294 M555 95 380 175 102 224 M601 180 410 209 198 230"/>
+                    <path d="M280 71 340 115 363 189 304 250 238 204 251 140Z M270 105 402 130 M198 230 304 250 410 209"/>
+                    <path d="M365 343 346 263 380 175 555 95 M102 224 210 167 317 120 464 28"/>
+                  </g>
+                  <g fill="#27bdaf" stroke="#164b5e" stroke-width="3">
+                    <circle cx="285" cy="149" r="8"/><circle cx="324" cy="196" r="8"/><circle cx="398" cy="203" r="8"/><circle cx="438" cy="132" r="8"/><circle cx="494" cy="179" r="8"/><circle cx="365" cy="225" r="8"/><circle cx="468" cy="243" r="8"/>
+                  </g>
+                  <g font-family="Arial, sans-serif" fill="#fff" font-size="14">
+                    <text x="188" y="122">Modern Loft</text><path d="M272 128 285 149" stroke="#27bdaf" stroke-width="1.4"/>
+                    <text x="110" y="178">Caterina’s House</text><path d="M260 174 324 196" stroke="#27bdaf" stroke-width="1.4"/>
+                    <text x="111" y="225">Fidia’s House</text><path d="M236 222 365 225" stroke="#27bdaf" stroke-width="1.4"/>
+                    <text x="420" y="105">Under the Vertical Forest</text><path d="M440 111 438 132" stroke="#27bdaf" stroke-width="1.4"/>
+                    <text x="503" y="171">Flo House</text><path d="M496 175 494 179" stroke="#27bdaf" stroke-width="1.4"/>
+                    <text x="430" y="224">A Terrace in Bicocca</text><path d="M450 218 398 203" stroke="#27bdaf" stroke-width="1.4"/>
+                    <text x="475" y="275">Genny’s Home</text><path d="M475 263 468 243" stroke="#27bdaf" stroke-width="1.4"/>
+                  </g>
+                </svg>
+              </div>
+            </div>
+          </section>'''
+          css='''<style id="ch-zone-style">
+          .ch-zones{background:#164b5e;color:#f4fcfa;padding:60px 0}
+          .ch-zones-layout{display:grid;grid-template-columns:1fr 1.65fr;gap:32px;align-items:center}
+          .ch-zones h2{color:#fff;font-family:Georgia,serif;font-size:clamp(26px,3vw,39px);line-height:1.15}
+          .ch-zones p{max-width:400px;line-height:1.7}
+          .ch-zones .eyebrow{color:#86e6d6}
+          .ch-zones-footnote{font-size:11px;opacity:.74;margin-top:18px}
+          .ch-zones-map{min-width:0}
+          .ch-zones-map svg{width:100%;height:auto;display:block}
+          @media(max-width:750px){.ch-zones{padding:38px 0}.ch-zones-layout{grid-template-columns:1fr;gap:15px}.ch-zones-map svg{max-width:100%;height:auto}}
+          </style>'''
+          assert '</head>' in html
+          html=html.replace('</head>',css+'</head>',1)
+          html=html.replace(marker,section+marker,1)
+          p.write_text(html,encoding='utf-8')
+          PY
+      - name: Registra modifica
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Aggiungi sezione Milano con mappa illustrativa"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
