@@ -1,0 +1,47 @@
+name: Logo nei tre punti
+on:
+  push:
+    paths:
+      - ".github/workflows/logo-tre-punti.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  aggiorna-logo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inserisci logo originale accanto ai numeri
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path("index.html")
+          html=p.read_text(encoding="utf-8")
+          if 'id="feature-logo-stile"' not in html:
+              m=re.search(r'<a class="brand"[^>]*><img[^>]*?src="(data:image/[^"]+)"',html)
+              if not m:
+                  raise SystemExit("Logo originale non trovato; nessun cambiamento")
+              style='''<style id="feature-logo-stile">
+          .feature .feature-heading-number{display:flex;align-items:center;gap:12px}
+          .feature .feature-heading-number img{width:48px;height:32px;object-fit:contain;object-position:center}
+          @media(max-width:650px){.feature .feature-heading-number img{width:40px;height:28px}}
+          </style>'''
+              for i in (1,2,3):
+                  old=f'<b>0{i}</b>'
+                  if old not in html:
+                      raise SystemExit(f"Numero 0{i} non trovato; nessun cambiamento")
+                  new=f'<div class="feature-heading-number"><b>0{i}</b><img alt="" aria-hidden="true" src="{m.group(1)}"/></div>'
+                  html=html.replace(old,new,1)
+              html=html.replace("</head>",style+"</head>",1)
+              p.write_text(html,encoding="utf-8")
+          PY
+      - name: Salva modifiche
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Logo Caterina accanto a 01 02 03"
+            git push
+          fi
