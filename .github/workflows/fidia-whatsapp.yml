@@ -1,0 +1,49 @@
+name: Richieste WhatsApp per le camere Fidia
+on:
+  push:
+    paths:
+      - ".github/workflows/fidia-whatsapp.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  aggiorna-fidia:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collega cinque camere al contatto WhatsApp
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from urllib.parse import quote
+          import re
+          p=Path('index.html')
+          html=p.read_text(encoding='utf-8')
+          start=html.find('<div id="fidia-soluzioni"')
+          assert start>=0, 'Sezione Fidia non trovata'
+          end=html.find('</div><p class="fidia-note">',start)
+          assert end>start, 'Fine elenco Fidia non trovata'
+          part=html[start:end]
+          for name in ('Olimpia','Zeus','Athena','Efeso','Apollo'):
+              pattern=r'(<div class="fidia-room"><strong>'+name+r'</strong>.*?</p>)(</div>)'
+              msg=quote('Buongiorno Caterina, vorrei informazioni e disponibilità per Fidia’s House – '+name, safe='')
+              link='<a class="fidia-room-contact" target="_blank" rel="noopener" href="https://wa.me/393337992444?text='+msg+'">Chiedi disponibilità per '+name+'</a>'
+              part,n=re.subn(pattern, lambda m:m.group(1)+link+m.group(2),part,count=1,flags=re.S)
+              if n!=1 and 'Chiedi disponibilità per '+name not in part:
+                  raise SystemExit('Camera non trovata: '+name)
+          html=html[:start]+part+html[end:]
+          if 'id="fidia-wa-style"' not in html:
+              style='<style id="fidia-wa-style">.fidia-room-contact{display:inline-block;margin-top:9px;font-size:12px;font-weight:650;color:#136f51!important;text-decoration:underline;text-underline-offset:3px}.fidia-room-contact:focus-visible{outline:2px solid #136f51;outline-offset:3px}</style>'
+              html=html.replace('</head>',style+'</head>',1)
+          p.write_text(html,encoding='utf-8')
+          PY
+      - name: Pubblica
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Aggiungi contatti WhatsApp specifici per cinque camere Fidia"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
