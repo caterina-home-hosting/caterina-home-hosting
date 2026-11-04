@@ -2,6 +2,16 @@
 (() => {
   'use strict';
   function initializeLanguage() {
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switch';
+  switcher.setAttribute('role', 'group');
+  switcher.innerHTML = '<button type="button" lang="it" data-lang="it" aria-label="Italiano">IT</button><span aria-hidden="true">|</span><button type="button" lang="en" data-lang="en" aria-label="English">EN</button>';
+  const navigation = document.querySelector('header nav') || document.querySelector('header') || document.body;
+  navigation.append(switcher);
+  switcher.style.display = 'flex';
+  switcher.style.visibility = 'visible';
+  switcher.style.zIndex = '1000';
+
   const translations = {
     'Caterina Home Hosting | Appartamenti a Milano': 'Caterina Home Hosting | Apartments in Milan',
     'Caterina Home Hosting, appartamenti e ospitalità personale a Milano': 'Caterina Home Hosting, apartments and a personal welcome in Milan',
@@ -102,15 +112,6 @@
   });
   const credit = document.querySelector('.alessandra-credit a');
   if (credit) links.push({node: credit, it: credit.href, en: 'mailto:bertaalessandra3@gmail.com?subject=Website%20design%20enquiry'});
-  const switcher = document.createElement('div');
-  switcher.className = 'language-switch';
-  switcher.setAttribute('role', 'group');
-  switcher.innerHTML = '<button type="button" lang="it" data-lang="it" aria-label="Italiano">IT</button><span aria-hidden="true">|</span><button type="button" lang="en" data-lang="en" aria-label="English">EN</button>';
-  const navigation = document.querySelector('header nav') || document.querySelector('header') || document.body;
-  navigation.append(switcher);
-  switcher.style.display = 'flex';
-  switcher.style.visibility = 'visible';
-  switcher.style.zIndex = '1000';
   function setLanguage(lang) {
     lang = lang === 'en' ? 'en' : 'it';
     textNodes.forEach(item => {item.node.nodeValue = item[lang];});
