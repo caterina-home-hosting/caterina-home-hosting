@@ -1,6 +1,7 @@
 /* Italian / English translations for Caterina Home Hosting. */
 (() => {
   'use strict';
+  function initializeLanguage() {
   const translations = {
     'Caterina Home Hosting | Appartamenti a Milano': 'Caterina Home Hosting | Apartments in Milan',
     'Caterina Home Hosting, appartamenti e ospitalità personale a Milano': 'Caterina Home Hosting, apartments and a personal welcome in Milan',
@@ -105,7 +106,8 @@
   switcher.className = 'language-switch';
   switcher.setAttribute('role', 'group');
   switcher.innerHTML = '<button type="button" lang="it" data-lang="it" aria-label="Italiano">IT</button><span aria-hidden="true">|</span><button type="button" lang="en" data-lang="en" aria-label="English">EN</button>';
-  document.querySelector('header nav').append(switcher);
+  const navigation = document.querySelector('header nav') || document.querySelector('header') || document.body;
+  navigation.append(switcher);
   function setLanguage(lang) {
     lang = lang === 'en' ? 'en' : 'it';
     textNodes.forEach(item => {item.node.nodeValue = item[lang];});
@@ -124,7 +126,8 @@
   try {initial = localStorage.getItem('caterina-language') || 'it';} catch (_) {}
   const requested = new URLSearchParams(location.search).get('lang');
   setLanguage(['it', 'en'].includes(requested) ? requested : initial);
-  document.getElementById('request').addEventListener('submit', event => {
+  const requestForm = document.getElementById('request');
+  if (requestForm) requestForm.addEventListener('submit', event => {
     if (document.documentElement.lang !== 'en') return;
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -133,4 +136,10 @@
     const text = ['Hello Caterina, I would like to check availability.', 'Name: ' + value('name'), 'Email: ' + value('email'), 'Arrival: ' + value('from'), 'Departure: ' + value('to'), 'Guests: ' + value('guests'), 'Neighbourhood: ' + value('area'), 'Requests: ' + (value('message') || 'None')].join('\n');
     window.open('https://wa.me/393337992444?text=' + encodeURIComponent(text), '_blank', 'noopener');
   }, true);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeLanguage, {once:true});
+  } else {
+    initializeLanguage();
+  }
 })();
