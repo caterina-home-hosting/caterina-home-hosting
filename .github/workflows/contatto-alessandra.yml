@@ -1,0 +1,49 @@
+name: Contatto professionale Alessandra
+on:
+  push:
+    paths:
+      - ".github/workflows/contatto-alessandra.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  aggiorna:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Aggiungi contatto professionale nel footer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path("index.html")
+          s=p.read_text(encoding="utf-8")
+          start='<!-- CREDIT ALESSANDRA START -->'
+          end='<!-- CREDIT ALESSANDRA END -->'
+          block='''<!-- CREDIT ALESSANDRA START -->
+          <div class="alessandra-credit" style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.2);text-align:center;font-size:13px">
+            <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.75">Web design &amp; realizzazione</div>
+            <div style="margin-top:5px;font-weight:600">Alessandra Berta</div>
+            <a href="mailto:bertaalessandra3@gmail.com?subject=Richiesta%20realizzazione%20sito%20web" aria-label="Contatta Alessandra Berta via email" style="display:inline-block;margin-top:8px;text-decoration:underline;text-underline-offset:3px">Contattami</a>
+          </div>
+          <!-- CREDIT ALESSANDRA END -->'''
+          if start in s and end in s:
+              s=re.sub(re.escape(start)+r'.*?'+re.escape(end),lambda _:block,s,count=1,flags=re.S)
+          else:
+              # Rimpiazza la vecchia firma se presente, altrimenti aggiungi al footer.
+              s=re.sub(r'<p class="site-credit"[^>]*>\s*Sito (?:ideato e )?realizzato da Alessandra Berta\s*</p>', '', s, count=1)
+              if '</footer>' not in s:
+                  raise SystemExit("Footer non trovato: nessuna modifica")
+              s=s.replace('</footer>',block+'\n</footer>',1)
+          p.write_text(s,encoding="utf-8")
+          PY
+      - name: Registra aggiornamento
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Aggiungi firma e contatto email Alessandra Berta"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
