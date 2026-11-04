@@ -6,11 +6,22 @@
   switcher.className = 'language-switch';
   switcher.setAttribute('role', 'group');
   switcher.innerHTML = '<button type="button" lang="it" data-lang="it" aria-label="Italiano">IT</button><span aria-hidden="true">|</span><button type="button" lang="en" data-lang="en" aria-label="English">EN</button>';
-  const navigation = document.querySelector('header nav') || document.querySelector('header') || document.body;
-  navigation.append(switcher);
-  switcher.style.display = 'flex';
-  switcher.style.visibility = 'visible';
-  switcher.style.zIndex = '1000';
+  // Fixed independent control: stays visible above the header on mobile and desktop.
+  document.body.append(switcher);
+  Object.assign(switcher.style, {
+    position: 'fixed', top: '76px', right: '12px',
+    display: 'flex', visibility: 'visible', opacity: '1',
+    zIndex: '2147483647', alignItems: 'center', gap: '4px',
+    padding: '4px', border: '1px solid #b8c9c7', borderRadius: '9px',
+    background: '#ffffff', boxShadow: '0 3px 16px #0002'
+  });
+  switcher.querySelectorAll('button').forEach(button => {
+    Object.assign(button.style, {
+      display: 'inline-block', visibility: 'visible', minWidth: '44px',
+      minHeight: '44px', cursor: 'pointer', border: '0',
+      borderRadius: '6px', fontSize: '14px', fontWeight: '700'
+    });
+  });
 
   const translations = {
     'Caterina Home Hosting | Appartamenti a Milano': 'Caterina Home Hosting | Apartments in Milan',
@@ -119,7 +130,12 @@
     links.forEach(item => {item.node.href = item[lang];});
     document.documentElement.lang = lang;
     switcher.setAttribute('aria-label', lang === 'en' ? 'Language' : 'Lingua');
-    switcher.querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.lang === lang)));
+    switcher.querySelectorAll('button').forEach(button => {
+      const active = button.dataset.lang === lang;
+      button.setAttribute('aria-pressed', String(active));
+      button.style.background = active ? '#16414a' : '#ffffff';
+      button.style.color = active ? '#ffffff' : '#16414a';
+    });
     try {localStorage.setItem('caterina-language', lang);} catch (_) { /* Storage is optional. */ }
   }
   switcher.addEventListener('click', event => {
