@@ -1,0 +1,52 @@
+name: Schede appartamenti dal PDF
+on:
+  push:
+    paths:
+      - ".github/workflows/schede-pdf.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  aggiorna-schede:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Completa schede senza sostituire fotografie
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          html=p.read_text(encoding='utf-8')
+          descriptions={
+            'under': ('Vista sulla Milano contemporanea, spazio di lavoro e comfort.', '60 m², fino a 3 ospiti, 1 camera, 2 letti e 1 bagno. Affaccio sulla Biblioteca degli Alberi e su piazza Gae Aulenti. Cucina, Wi-Fi, TV, aria condizionata, lavatrice e spazio di lavoro.'),
+            'flo': ('Terrazzo, box privato e ricarica auto vicino agli Arcimboldi.', '60 m², fino a 4 ospiti, 1 camera, 2 letti e 1 bagno. Ampio terrazzo, box auto privato, ricarica auto elettrica, Wi-Fi, aria condizionata e spazio di lavoro. Vicina alla metropolitana rossa e al Teatro Arcimboldi.'),
+            'genny': ('Un bilocale luminoso in un quartiere pieno di carattere.', 'Fino a 4 ospiti, 1 camera e 1 bagno. Bilocale luminoso e silenzioso nel quartiere Crescenzago, con cucina, spazio di lavoro, aria condizionata, Wi-Fi, lavatrice, ascensore e culla su richiesta.'),
+            'caterina': ('Un grande bilocale vicino a Gae Aulenti e Bosco Verticale.', '40 m², fino a 4 ospiti, 1 camera, 2 letti e 1 bagno. Bilocale nel cuore dell’Isola, a pochi passi da Gae Aulenti e Bosco Verticale; cucina, Wi-Fi, TV, aria condizionata, lavatrice e spazio di lavoro.'),
+            'modern': ('Ingresso indipendente, stile contemporaneo e animali benvenuti.', '38 m², fino a 3 ospiti, 1 camera, 2 letti e 1 bagno. Loft ristrutturato con ingresso indipendente, vicino a Maciachini e Dergano M3, con cucina, Wi-Fi, TV, aria condizionata e lavatrice. Animali ammessi.'),
+            'terrace': ('Appartamento a Milano in zona Bicocca, con terrazzo.', 'Fino a 4 ospiti, 1 camera e 1 bagno. Bilocale con balcone vicino all’Università Bicocca e al Teatro Arcimboldi, con cucina, TV, Wi-Fi, aria condizionata e lavatrice. Animali ammessi.')
+          }
+          changes=0
+          for code,(old,new) in descriptions.items():
+              pat=r'(<article class="card" data-property="'+re.escape(code)+r'">)(.*?)(</article>)'
+              m=re.search(pat,html,re.S)
+              if not m: raise SystemExit('Scheda mancante: '+code)
+              block=m.group(2)
+              if old in block:
+                  block=block.replace(old,new,1);changes+=1
+              elif new not in block: raise SystemExit('Descrizione diversa: '+code)
+              block=re.sub(r'>Vedi le 7 foto di [^<]+</a>', '>Guarda le foto della casa</a>',block,count=1)
+              html=html[:m.start(2)]+block+html[m.end(2):]
+          p.write_text(html,encoding='utf-8')
+          print('Schede aggiornate:',changes)
+          PY
+      - name: Registra e pubblica
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Completa sei schede con informazioni del PDF"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
