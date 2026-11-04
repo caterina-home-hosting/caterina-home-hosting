@@ -1,0 +1,6 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Anteprima · Caterina Home Hosting</title><style>*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:Arial,sans-serif}body{display:flex;flex-direction:column;background:#f7f6f1}.bar{background:#0c2a30;color:#fff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px}.bar a{color:#fff;text-decoration:underline}.bar strong{font-weight:700}iframe{border:0;width:100%;flex:1;min-height:0}@media(max-width:600px){.bar{font-size:11px;flex-wrap:wrap}}</style></head><body><div class="bar"><span><strong>ANTEPRIMA DI PROVA</strong> · Stessi colori, foto, contenuti e collegamenti. Gli appartamenti sono subito dopo la copertina.</span><a href="./index.html" target="_blank" rel="noopener">Sito originale</a></div><iframe id="site" title="Anteprima Caterina Home Hosting" src="./index.html"></iframe><script>
+document.getElementById('site').addEventListener('load',function(){
+ try{const d=this.contentDocument;const hero=d.querySelector('main .hero');const apartments=d.querySelector('#appartamenti');if(hero&&apartments){hero.insertAdjacentElement('afterend',apartments);}}catch(e){console.error('Anteprima non disponibile',e);}
+});
+</script></body></html>
