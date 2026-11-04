@@ -108,6 +108,9 @@
   switcher.innerHTML = '<button type="button" lang="it" data-lang="it" aria-label="Italiano">IT</button><span aria-hidden="true">|</span><button type="button" lang="en" data-lang="en" aria-label="English">EN</button>';
   const navigation = document.querySelector('header nav') || document.querySelector('header') || document.body;
   navigation.append(switcher);
+  switcher.style.display = 'flex';
+  switcher.style.visibility = 'visible';
+  switcher.style.zIndex = '1000';
   function setLanguage(lang) {
     lang = lang === 'en' ? 'en' : 'it';
     textNodes.forEach(item => {item.node.nodeValue = item[lang];});
